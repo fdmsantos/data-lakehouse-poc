@@ -1,0 +1,22 @@
+---
+version: '3'
+services:
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - 80:80
+    volumes:
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/dbt-demo-docker/pgadmin:/var/lib/pgadmin
+  warehouse:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+    ports:
+      - 5432:5432
+    volumes:
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/dbt-demo-docker/warehouse/data:/var/lib/postgresql/data
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/dbt-demo-docker/warehouse/sampledata:/home/sampledata

@@ -35,3 +35,6 @@ override.tf.json
 # Ignore Maven Files
 *.iml
 twitter-producer/target/
+
+# Environment Files
+.env

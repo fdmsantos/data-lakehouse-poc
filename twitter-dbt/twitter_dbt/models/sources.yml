@@ -1,0 +1,16 @@
+
+version: 2
+
+sources:
+  - name: twitter_raw
+    schema: raw
+    tables:
+      - name: tweets
+        identifier: tweets
+  - name: twitter_public
+    schema: public
+    tables:
+      - name: players
+        identifier: players
+      - name: teams
+        identifier: teams

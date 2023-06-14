@@ -1,0 +1,9 @@
+
+version: 2
+
+sources:
+  - name: tickit
+    schema: public
+    tables:
+      - name: listing
+        identifier: listing

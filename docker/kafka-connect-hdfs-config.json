@@ -1,0 +1,13 @@
+{
+  "name": "HdfsSinkConnector",
+  "connector.class": "io.confluent.connect.hdfs.HdfsSinkConnector",
+  "value.converter.schema.registry.url": "http://localhost:8081",
+  "schema.registry.url": "http://localhost:8081",
+  "flush.size": "2",
+  "topics": "tweets",
+  "tasks.max": "1",
+  "hdfs.url": "hdfs://172.17.0.1:9000/user/nobody/",
+  "value.converter.schemas.enable": "true",
+  "value.converter": "io.confluent.connect.avro.AvroConverter",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter"
+}

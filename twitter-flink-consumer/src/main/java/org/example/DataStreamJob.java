@@ -85,6 +85,7 @@ public class DataStreamJob {
 				.keyBy(value -> value.f0)
 				.window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
 				.sum(1);
+		// TODO Add filter and Docker file
 
 		dataStream.print();
 

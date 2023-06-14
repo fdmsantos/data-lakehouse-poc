@@ -1,0 +1,48 @@
+---
+version: '3'
+services:
+  kafka-cluster:
+    image: lensesio/fast-data-dev
+    environment:
+      ADV_HOST: 127.0.0.1         # Change to 192.168.99.100 if using Docker Toolbox
+      RUNTESTS: 0                 # Disable Running tests so the cluster starts faster
+      SAMPLEDATA: 0
+      RUNNING_SAMPLEDATA: 0
+      FORWARDLOGS: 0
+      CONNECTORS: jdbc
+    ports:
+      - 3030:3030                 # Landoop UI
+      - 8081-8083:8081-8083       # REST Proxy, Schema Registry, Kafka Connect ports
+      - 9092:9092                 # Kafka Broker
+    volumes:
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/twitter-dbt/docker-volumes/kafka/connectors/kafka-connect-jdbc-10.6.0:/connectors/kafka-connect-jdbc-10.6.0
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - 80:80
+    volumes:
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/twitter-dbt/docker-volumes/pgadmin:/var/lib/pgadmin
+  warehouse:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+    ports:
+      - 5432:5432
+    volumes:
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/twitter-dbt/docker-volumes/warehouse/data:/var/lib/postgresql/data
+  players-db:
+    image: postgres
+    restart: always
+    command: -c 'config_file=/etc/postgresql/postgresql.conf'
+    environment:
+      POSTGRES_PASSWORD: example
+    ports:
+      - 5433:5432
+    volumes:
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/twitter-dbt/docker-volumes/players_db/data:/var/lib/postgresql/data
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/twitter-dbt/docker-volumes/players_db/postgresql.conf:/etc/postgresql/postgresql.conf
+      - /home/fsantos/Documents/Projects/Personal/data-lakehouse-poc/twitter-dbt/docker-volumes/players_db/pg_hba.conf:/pg_hba.conf

@@ -1,53 +1,90 @@
 ---
 version: '3'
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.0
-    container_name: zookeeper
+  kafka-cluster:
+    image: lensesio/fast-data-dev:3.3.1
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-
-  kafka-broker:
-    image: confluentinc/cp-kafka:7.3.0
-    container_name: kafka-broker
+      ADV_HOST: 54.76.210.83         # Change to 192.168.99.100 if using Docker Toolbox
+      RUNTESTS: 0                 # Disable Running tests so the cluster starts faster
+      SAMPLEDATA: 0
+      RUNNING_SAMPLEDATA: 0
+      FORWARDLOGS: 0
     ports:
-      - "9094:9094"
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,OUTSIDE://0.0.0.0:9094
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-broker:9092,OUTSIDE://54.76.210.83:9094 # TODO Hardcoded IP
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-
-  schema-registry:
-    image: confluentinc/cp-schema-registry
-    container_name: schema-registry
-    depends_on:
-      - kafka-broker
+      - 2181:2181                 # Zookeeper
+      - 3030:3030                 # Landoop UI
+      - 8081-8083:8081-8083       # REST Proxy, Schema Registry, Kafka Connect ports
+      - 9581-9585:9581-9585       # JMX Ports
+      - 9092:9092                 # Kafka Broker
+  zeppelin:
+    image: apache/zeppelin:0.10.1
     ports:
-      - "8081:8081"
+      - 8080:8080
     environment:
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka-broker:9092
-      SCHEMA_REGISTRY_HOST_NAME: schemaregistry
+      ZEPPELIN_LOG_DIR: /logs
+      ZEPPELIN_NOTEBOOK_DIR: /notebook
+      SPARK_HOME: /opt/spark
+    volumes:
+      - /home/ubuntu/zeppelin/logs:/logs
+      - /home/ubuntu/zeppelin/notebook:/notebook
+      - /home/ubuntu/spark:/opt/spark
 
-  schema-registry-ui:
-    image: landoop/schema-registry-ui
-    container_name: schema-registry-ui
-    depends_on:
-      -  schema-registry
-    ports:
-      - "8000:8000"
+  metastore:
+    image: postgres
+    restart: always
     environment:
-      SCHEMAREGISTRY_URL: http://schema-registry:8081
-      PROXY: true
-    network_mode: bridge
-    extra_hosts:
-      - "schema-registry:host-gateway"
+      POSTGRES_PASSWORD: example
+    ports:
+      - 5432:5432
+    volumes:
+      - /home/ubuntu/metastore/data:/var/lib/postgresql/data
+
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:7.3.0
+#    container_name: zookeeper
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#
+#  kafka-broker:
+#    image: confluentinc/cp-kafka:7.3.0
+#    container_name: kafka-broker
+#    ports:
+#      - "9094:9094"
+#    depends_on:
+#      - zookeeper
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+#      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,OUTSIDE://0.0.0.0:9094
+#      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-broker:9092,OUTSIDE://54.76.210.83:9094 # TODO Hardcoded IP
+#      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#
+#  schema-registry:
+#    image: confluentinc/cp-schema-registry
+#    container_name: schema-registry
+#    depends_on:
+#      - kafka-broker
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka-broker:9092
+#      SCHEMA_REGISTRY_HOST_NAME: schemaregistry
+#
+#  schema-registry-ui:
+#    image: landoop/schema-registry-ui
+#    container_name: schema-registry-ui
+#    depends_on:
+#      -  schema-registry
+#    ports:
+#      - "8000:8000"
+#    environment:
+#      SCHEMAREGISTRY_URL: http://schema-registry:8081
+#      PROXY: true
+#    network_mode: bridge
+#    extra_hosts:
+#      - "schema-registry:host-gateway"
 
 

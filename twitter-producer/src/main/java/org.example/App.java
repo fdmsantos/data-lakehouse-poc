@@ -50,11 +50,13 @@ public class App {
     }
 
     private static Producer<Object, Object> createProducer() {
+//    private static Producer<Object, String> createProducer() {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getenv("BOOTSTRAP_SERVERS"));
         props.put(ProducerConfig.CLIENT_ID_CONFIG, "KafkaMeetupProducer");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+//        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put("schema.registry.url",  System.getenv("SCHEMA_REGISTRY_URL"));
         return new KafkaProducer<>(props);
     }
@@ -68,7 +70,8 @@ public class App {
                 "\"name\":\"nba_tweet\"," +
                 "\"fields\":[" +
                     "{\"name\":\"id\",\"type\":\"string\"}," +
-                    "{\"name\":\"text\",\"type\":\"string\"}," +
+                    "{\"name\":\"tweet\",\"type\":\"string\"}," +
+                    "{\"name\":\"created_at\",\"type\":\"string\"}," +
                     "{\"name\":\"players\",\"type\": {\"type\":\"array\",\"items\":\"string\"}}" +
                 "]}";
 
@@ -81,7 +84,7 @@ public class App {
                 .build();
 
         URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream");
-        uriBuilder.setParameter("tweet.fields", "context_annotations");
+        uriBuilder.setParameter( "tweet.fields", "context_annotations,created_at");
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
         httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
@@ -97,7 +100,8 @@ public class App {
                     JsonObject jsonObject = JsonParser.parseString(line).getAsJsonObject();
                     GenericRecord avroRecord = new GenericData.Record(schema);
                     avroRecord.put("id", jsonObject.get("data").getAsJsonObject().get("id").toString());
-                    avroRecord.put("text", jsonObject.get("data").getAsJsonObject().get("text").toString());
+                    avroRecord.put("tweet", jsonObject.get("data").getAsJsonObject().get("text").toString());
+                    avroRecord.put("created_at", jsonObject.get("data").getAsJsonObject().get("created_at").toString());
                     List<String> list = new ArrayList<>();
                     for (JsonElement annotations : jsonObject.get("data").getAsJsonObject().get("context_annotations").getAsJsonArray()) {
                         if (annotations.getAsJsonObject().get("domain").getAsJsonObject().get("id").toString().replaceAll("^\"|\"$", "").equals("60")) {
@@ -107,6 +111,8 @@ public class App {
                     avroRecord.put("players", list);
                     ProducerRecord<Object, Object> record = new ProducerRecord<Object, Object>(TOPIC, jsonObject.get("data").getAsJsonObject().get("id").toString(), avroRecord);
                     RecordMetadata metadata = (RecordMetadata) producer.send(record).get();
+//                    ProducerRecord<Object, String> record = new ProducerRecord<Object, String>(TOPIC, jsonObject.get("data").getAsJsonObject().get("id").toString(), line);
+//                    RecordMetadata metadata = (RecordMetadata) producer.send(record).get();
                     System.out.printf("sent record(key=%s value=%s) meta(partition=%d, offset=%d) \n",
                             record.key(), record.value(), metadata.partition(), metadata.offset());
                 }
